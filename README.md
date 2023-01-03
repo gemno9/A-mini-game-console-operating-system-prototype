@@ -25,4 +25,4 @@ cp Desktop/kernel.bin /mnt/
 sync  
 umount /mnt/  
 
-3.Test on virtual machine
+
