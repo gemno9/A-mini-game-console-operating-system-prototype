@@ -10,24 +10,25 @@ Enter "make" in the console and execute
 "kernel.bin"
 
 ## How to run it?
-1.We need to make a UEFI bootable USB flash drive（shell.efi,boot.efi are already prepared for you.("shell.efi" and "boot.efi" is made by Tian Yu.）
+We need to make a UEFI bootable USB flash drive（"shell.efi","boot.efi" are already prepared for you."shell.efi" and "boot.efi" is made by Tian Yu.）
 
-2.Insert the USB flash disk into the system and type the following command on the console(Suppose these files are on your desktop:shell.efi,boot.efi,kernel.bin):
+## How to make a UEFI bootable USB flash drive?
+1.Use tools to clear all data in the sector of the U disk, and then convert the partition table type to GUID format.  
+2.Create a new ESP partition (20MB) in the U disk and align it to an integer multiple of 4096 sectors.  
+3.ESP partition file system select "FAT32 file" file system, 10MB is enough.  
+4.Use the following console command to put the UEFI program into the U disk under the Linux system(Suppose these files are on your desktop:shell.efi,boot.efi,kernel.bin):
 
-command1:  
 mount /dev/sdb1 /mnt/  
 mkdir -p /mnt/EFI/BOOT  
 cp Desktop/Shell.efi /mnt/EFI/BOOT/BOOTx64.EFI  
-sync  
-umount /mnt/  
-
-command2:  
-mount /dev/sdb1 /mnt/  
-mkdir -p /mnt/EFI/BOOT  
 cp Desktop/boot.efi /mnt/  
 cp Desktop/kernel.bin /mnt/  
 sync  
 umount /mnt/  
 
+## Test on virtual machine
+1.Enter the BIOS of the virtual machine, and adjust the boot priority of the U disk to the highest.  
+2.After entering the shell, enter "boot (the name of the bootloader)" to enter the operating system.  
+3.enjoy the game
 
-3. Test on virtual machine
+
