@@ -26,3 +26,4 @@ sync
 umount /mnt/  
 
 
+3. 
