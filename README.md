@@ -1,12 +1,16 @@
 # A mini game console operating system kernel prototype
-This operating system is imitated from the "mine" operating system made by Tian Yu.I made a simple game console operating system kernel based on it, and added a game I made myself.
+This operating system imitates the "MINE" operating system produced by Tian Yu, the author of "The Design and Implementation of a 64-bit Operating System". I made a simple game console operating system kernel based on it, and built in a game I made myself.
+This operating system currently only supports running on virtual machines, and more advanced features are still under development.
 ## How to compile it?
 Under the compiling environment of Linux.  
-My environment:Centos 7.
-## What is the final result of compilation?
+My environment:Centos 7.  
+Enter "make" in the console and execute
+
+## What is the final target file for compilation?
 "kernel.bin"
-## How to use it?
-1.Make a USB flash disk for UEFI boot（shell.efi,boot.efi is ready for you."shell.efi" and "boot.efi" is made by Tian Yu.）
+
+## How to run it?
+1.We need to make a UEFI bootable USB flash drive（shell.efi,boot.efi are already prepared for you.("shell.efi" and "boot.efi" is made by Tian Yu.）
 
 2.Insert the USB flash disk into the system and type the following command on the console(Suppose these files are on your desktop:shell.efi,boot.efi,kernel.bin):
 
@@ -26,4 +30,4 @@ sync
 umount /mnt/  
 
 
-3. 
+3. Test on virtual machine
