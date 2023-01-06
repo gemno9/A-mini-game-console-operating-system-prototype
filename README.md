@@ -31,4 +31,7 @@ umount /mnt/
 2.After entering the shell, enter "boot (the name of the bootloader)" to enter the operating system.  
 3.enjoy the game
 
+##How to set up the virtual machine?
+1.I use "VMware Workstation 15" as a test environment(You need to set it to "UEFI Boot Mode").  
+2.I have prepared a virtual machine file for you (it stores a snapshot, you can load the snapshot to experience the system), decompress the "mini game system_vmdk.rar" and use "VM15" to open the virtual machine file inside and you can use it .
 
