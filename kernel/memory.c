@@ -74,25 +74,12 @@ void init_memory()
 {
 	int i,j;
 	unsigned long TotalMem = 0 ;
-	struct EFI_E820_MEMORY_DESCRIPTOR *p = NULL;	
-	
-	p = (struct EFI_E820_MEMORY_DESCRIPTOR *)boot_para_info->E820_Info.E820_Entry;
 
-	for(i = 0;i < boot_para_info->E820_Info.E820_Entry_count;i++)
-	{
-		if(p->type == 1)
-			TotalMem +=  p->length;
-
-		memory_management_struct.e820[i].address += p->address;
-		memory_management_struct.e820[i].length	 += p->length;
-		memory_management_struct.e820[i].type	 = p->type;		
-		memory_management_struct.e820_length = i;
-
-		p++;
-		if(p->type > 4 || p->length == 0 || p->type < 1)
-			break;		
-	}
-
+	/*
+	Use the macro function PAGE_2M_ALIGN to align the start addresses of these segments with the upper boundary of the 2 MB page,  
+	 and the address after alignment is the effective memory start address of the segment.The end address of these segments is obtained by adding the original start address of the segmentand the segmentlength, 
+	 and then the calculation result is aligned to the lower boundary of the 2 MB page by shifting
+	*/
 
 	TotalMem = 0;
 
@@ -120,8 +107,12 @@ void init_memory()
 
 	memset(memory_management_struct.bits_map,0xff,memory_management_struct.bits_length);		//init bits map memory
 
-	//pages construction init
-
+	/*
+	pages construction init
+	This part of the program is responsible for creating the storage space and allocation records of the struct page structure array. The storage space of the struct page structure array is located behind the bit mapping bitmap. 
+	The number of elements in the array is the number of pages that can be divided into physical address spaces. Its allocation and calculation methods are similar to the bit mapping bitmap, except that 
+	the struct page structure array is here All cleared for use in subsequent initialization routines
+	*/
 	memory_management_struct.pages_struct = (struct Page *)(((unsigned long)memory_management_struct.bits_map + memory_management_struct.bits_length + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
 
 	memory_management_struct.pages_size = TotalMem >> PAGE_2M_SHIFT;
@@ -130,7 +121,10 @@ void init_memory()
 
 	memset(memory_management_struct.pages_struct,0x00,memory_management_struct.pages_length);	//init pages memory
 
-	//zones construction init
+	/*zones construction init
+	At present, it is impossible to calculate the number of elements in the struct zone structure array.
+	We can only assign a value of 0 to the zones_size member variable, and temporarily calculate the zones_length member variable according to 5 struct zone structures.
+	*/
 
 	memory_management_struct.zones_struct = (struct Zone *)(((unsigned long)memory_management_struct.pages_struct + memory_management_struct.pages_length + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
 
@@ -140,7 +134,12 @@ void init_memory()
 
 	memset(memory_management_struct.zones_struct,0x00,memory_management_struct.zones_length);	//init zones memory
 
-	
+	/*
+	This program is the core code for initializing the bitmap map, struct page structure, and struct zone structure. 
+	It will traverse all physical memory segment information to initialize available physical memory segments. 
+	The code first filters out non-physical memory segments, and then performs page alignment on the remaining available physical memory segments.
+	If there are available physical pages in this segment of physical memory, this segment of memory space is regarded as an available struct zone area space, and the It is initialized.
+	*/
 
 	for(i = 0;i <= memory_management_struct.e820_length;i++)
 	{
@@ -194,8 +193,10 @@ void init_memory()
 		
 	}
 
-	/////////////init address 0 to page struct 0; because the memory_management_struct.e820[0].type != 1
-	
+	/*init address 0 to page struct 0; because the memory_management_struct.e820[0].type != 1
+	After some traversal, all available physical memory pages have been initialized, but since the 0~2 MB physical memory pages contain multiple physical memory segments, 
+	including kernel programs, special initialization must be performed on this page. After that, the number of elements in the spatial structure array of the struct zone area can be calculated.
+	*/
 	memory_management_struct.pages_struct->zone_struct = memory_management_struct.zones_struct;
 
 	memory_management_struct.pages_struct->PHY_address = 0UL;
@@ -203,12 +204,18 @@ void init_memory()
 	memory_management_struct.pages_struct->reference_count = 0;
 	memory_management_struct.pages_struct->age = 0;
 
-	/////////////
+
 
 	memory_management_struct.zones_length = (memory_management_struct.zones_size * sizeof(struct Zone) + sizeof(long) - 1) & ( ~ (sizeof(long) - 1));
 
 	ZONE_DMA_INDEX = 0;	//need rewrite in the future
 	ZONE_NORMAL_INDEX = 0;	//need rewrite in the future
+
+	/*
+	This section of the program traverses and displays the detailed statistical information of the struct zone of each area space structure. 
+	If the starting address of the current area is 0x100000000, the index value of this area is recorded in the global variable ZONE_UNMAPED_INDEX, indicating the physical memory page starting from the area space No page table mapping has been done.
+	Finally, adjust the value of the member variable end_of_struct to record the end address of the above structure, and reserve a section of memory space to prevent out-of-bounds access.
+	*/
 
 	for(i = 0;i < memory_management_struct.zones_size;i++)	//need rewrite in the future
 	{
@@ -230,6 +237,12 @@ void init_memory()
 	flush_tlb();
 }
 
+
+/*
+	number: number <= 64
+	zone_select: zone select from dma , mapped in  pagetable , unmapped in pagetable
+	page_flags: struct Page flages
+*/
 
 struct Page * alloc_pages(int zone_select,int number,unsigned long page_flags)
 {
